@@ -14,10 +14,10 @@ describe('Save Models', function() {
         State.setAttribute('name',String);
         State.setAttribute('id',Number);
         State.setAttribute('isStart', Boolean);
-        ReferenceModel.setModellingElement(State);
+        ReferenceModel.add(State);
 
     try {
-console.log(ReferenceModel);        JSON_save.saveModel(ReferenceModel,'./test/persistence.json');
+      JSON_save.saveModel(ReferenceModel,'./test/persistence.json');
       done();
     }
 catch(e){
