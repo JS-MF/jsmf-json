@@ -71,15 +71,28 @@ function parse(str, ownTypes) {
             return new JSMF.Class(name, [], attributes);
         });
     });
-    for (var i in raw.classes) {
-        for (var k in raw.classes[i]) {
-            result.classes[i][k].superClasses =
-                _.map(raw.classes[i][k].superClasses, function(s) {
-                    return result.classes[s.uuid][s.index];
+    resolveClassReferences(raw.classes, result.classes);
+    result.elements = _.mapValues(raw.elements, function(vs) {
+        return _.map(vs, function(elem, name) {
+            var cls = result.classes[elem.class.uuid][elem.class.index];
+            var res = new cls(elem.attributes);
+            return res;
+        });
+    });
+    resolveElementReferences(raw.elements, result.elements);
+    return hydrateModel(raw.model, result);
+}
+
+function resolveClassReferences(rawClasses, hydratedClasses) {
+    for (var i in rawClasses) {
+        for (var k in rawClasses[i]) {
+            hydratedClasses[i][k].superClasses =
+                _.map(rawClasses[i][k].superClasses, function(s) {
+                    return hydratedClasses[s.uuid][s.index];
                 });
-            result.classes[i][k].references =
-                _.mapValues(raw.classes[i][k].references, function(r) {
-                    var ref = { type: result.classes[r.type.uuid][r.type.index]
+            hydratedClasses[i][k].references =
+                _.mapValues(rawClasses[i][k].references, function(r) {
+                    var ref = { type: hydratedClasses[r.type.uuid][r.type.index]
                               , cardinality: JSMF.Cardinality.check(r.cardinality)
                               };
                     if (r.opposite !== undefined) {
@@ -89,23 +102,18 @@ function parse(str, ownTypes) {
                 });
         }
     }
-    result.elements = _.mapValues(raw.elements, function(vs) {
-        return _.map(vs, function(elem, name) {
-            var cls = result.classes[elem.class.uuid][elem.class.index];
-            var res = new cls(elem.attributes);
-            return res;
-        });
-    });
-    for (var i in raw.elements) {
-        for (var k in raw.elements[i]) {
-            _.forEach(raw.elements[i][k].references, function(refs, name) {
-                result.elements[i][k][name] = _.map(refs, function(ref) {
-                    return result.elements[ref.uuid][ref.index];
+}
+
+function resolveElementReferences(rawElements, hydratedElements) {
+    for (var i in rawElements) {
+        for (var k in rawElements[i]) {
+            _.forEach(rawElements[i][k].references, function(refs, name) {
+                hydratedElements[i][k][name] = _.map(refs, function(ref) {
+                    return hydratedElements[ref.uuid][ref.index];
                 })
             });
         }
     }
-    return hydrateModel(raw.model, result);
 }
 
 function hydrateModel(m, content) {
