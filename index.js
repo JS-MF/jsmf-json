@@ -248,6 +248,8 @@ function stringifyType(t, enums, ownTypes) {
     }
     switch (t) {
         case JSMF.Number: return 'Number'
+        case JSMF.Positive: return 'Positive'
+        case JSMF.Negative: return 'Negative'
         case JSMF.String: return 'String'
         case JSMF.Boolean: return 'Boolean'
         case JSMF.Date: return 'Date'
@@ -273,6 +275,8 @@ function reviveType(t, enums, ownTypes) {
     }
     switch (t) {
         case 'Number': return JSMF.Number
+        case 'Positive': return JSMF.Positive
+        case 'Negative': return JSMF.Negative
         case 'String': return JSMF.String
         case 'Boolean': return JSMF.Boolean
         case 'Date': return JSMF.Date
