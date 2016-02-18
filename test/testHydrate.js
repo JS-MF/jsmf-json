@@ -100,12 +100,40 @@ describe('JSON serialization / rebuild', function() {
       it('works for a single element with a reference model', function(done) {
           var f = new Class('Foo', [], {name: String});
           var e = new f(42);
-            var MM = new JSMF.Model('MM', {}, [f]);
-            var original = new JSMF.Model('M', MM, [e]);
-            var str = json.stringify(original);
-            var rebuilt = json.parse(str);
-            rebuilt.should.eql(original);
-            done();
+          var MM = new JSMF.Model('MM', {}, [f]);
+          var original = new JSMF.Model('M', MM, [e]);
+          var str = json.stringify(original);
+          var rebuilt = json.parse(str);
+          rebuilt.should.eql(original);
+          done();
+      });
+
+      it('works without adding everything to modelElements', function(done) {
+          var f = new Class('Foo', [], {name: String});
+          f.addReference('f', f);
+          var e1 = new f(42);
+          var e2 = new f(24);
+          e1.f = e2;
+          var MM = new JSMF.Model('MM', {}, [f]);
+          var original = new JSMF.Model('M', MM, [e1]);
+          var str = json.stringify(original);
+          var rebuilt = json.parse(str);
+          rebuilt.should.eql(original);
+          done();
+      });
+
+      it('works with associated elements', function(done) {
+          var f = new Class('Foo', [], {name: String});
+          f.addReference('f', f, JSMF.Cardinality.any, undefined, undefined, f);
+          var e1 = new f(42);
+          var e2 = new f(24);
+          e1.addF(e1, e2);
+          var MM = new JSMF.Model('MM', {}, [f]);
+          var original = new JSMF.Model('M', MM, [e1]);
+          var str = json.stringify(original);
+          var rebuilt = json.parse(str);
+          rebuilt.should.eql(original);
+          done();
       });
 
   });

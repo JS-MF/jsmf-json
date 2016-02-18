@@ -183,10 +183,21 @@ function prepareClass(m, classes) {
 function prepareElement(m, classes, elements) {
     var elemPath = jsmfFindByObject(m, elements);
     if (elemPath === undefined) {
+        var meta = m.__meta__;
         elemPath = {uuid: JSMF.jsmfId(m)};
         var values = elements[elemPath.uuid] || [];
         elemPath.index = values.push(m) - 1;
         elements[elemPath.uuid] = values;
+        _.forEach(meta.references, function(ref) {
+            _.forEach(ref, function(e) {
+                prepareElement(e, classes, elements);
+            });
+        });
+        _.forEach(meta.associated, function(ref) {
+            _.forEach(ref, function(e) {
+                prepareElement(e.associated, classes, elements);
+            });
+        });
         prepareClass(m.conformsTo(), classes);
     }
     return elemPath;
@@ -232,10 +243,16 @@ function dryClass(m, ownTypes, enums, classes) {
 }
 
 function dryElement(m, classes, elements) {
-    var res = {attributes: m.__meta__.attributes};
-    res.references = _.mapValues(m.__meta__.references, function(refs) {
+    var meta = m.__meta__;
+    var res = {attributes: meta.attributes};
+    res.references = _.mapValues(meta.references, function(refs) {
         return _.map(refs, function(o) {
             return jsmfFindByObject(o, elements);
+        });
+    });
+    res.associated = _.mapValues(meta.associated, function(as) {
+        return _.map(as, function(a) {
+            return jsmfFindByObject(a, elements);
         });
     });
     res.class = jsmfFindByName(m.conformsTo(), classes);
