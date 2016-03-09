@@ -125,8 +125,8 @@ describe('JSON serialization / rebuild', function() {
       it('works with associated elements', function(done) {
           var f = new Class('Foo', [], {name: String});
           f.addReference('f', f, JSMF.Cardinality.any, undefined, undefined, f);
-          var e1 = new f(42);
-          var e2 = new f(24);
+          var e1 = new f({name: '42'});
+          var e2 = new f({name: '24'});
           e1.addF(e1, e2);
           var MM = new JSMF.Model('MM', {}, [f]);
           var original = new JSMF.Model('M', MM, [e1]);

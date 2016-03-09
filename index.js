@@ -98,6 +98,9 @@ function resolveClassReferences(rawClasses, hydratedClasses) {
                     if (r.opposite !== undefined) {
                         ref.opposite = r.opposite;
                     }
+                    if (r.associated !== undefined) {
+                        ref.associated = hydratedClasses[r.associated.uuid][r.associated.index];
+                    }
                     return ref;
                 });
         }
@@ -183,7 +186,7 @@ function prepareClass(m, classes) {
 function prepareElement(m, classes, elements) {
     var elemPath = jsmfFindByObject(m, elements);
     if (elemPath === undefined) {
-        var meta = m.__meta__;
+        var meta = m.__jsmf__;
         elemPath = {uuid: JSMF.jsmfId(m)};
         var values = elements[elemPath.uuid] || [];
         elemPath.index = values.push(m) - 1;
@@ -234,16 +237,20 @@ function dryClass(m, ownTypes, enums, classes) {
         return stringifyType(a, enums, ownTypes);
     });
     res.references = _.mapValues(m.references, function(r) {
-        return { type: jsmfFindByName(r.type, classes)
+        var dryR = { type: jsmfFindByName(r.type, classes)
                , opposite: r.opposite
                , cardinality: r.cardinality
                };
+        if (r.associated !== undefined) {
+            dryR.associated = jsmfFindByName(r.associated, classes);
+        }
+        return dryR;
     });
     return res;
 }
 
 function dryElement(m, classes, elements) {
-    var meta = m.__meta__;
+    var meta = m.__jsmf__;
     var res = {attributes: meta.attributes};
     res.references = _.mapValues(meta.references, function(refs) {
         return _.map(refs, function(o) {
@@ -252,7 +259,8 @@ function dryElement(m, classes, elements) {
     });
     res.associated = _.mapValues(meta.associated, function(as) {
         return _.map(as, function(a) {
-            return jsmfFindByObject(a, elements);
+            var res = jsmfFindByObject(a.associated, elements);
+            return res;
         });
     });
     res.class = jsmfFindByName(m.conformsTo(), classes);
