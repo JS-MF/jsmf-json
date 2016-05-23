@@ -42,7 +42,7 @@ describe('JSON serialization / rebuild', function() {
             var original = new JSMF.Model('M', {}, e);
             var str = json.stringify(original);
             var rebuilt = json.parse(str);
-            rebuilt.should.eql(original);
+            rebuilt.should.be.eql(original);
             done();
         });
 

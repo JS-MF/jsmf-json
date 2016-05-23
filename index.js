@@ -59,7 +59,12 @@ function parse(str, ownTypes) {
     )
     result.classes = _.mapValues(raw.classes, vs =>
         _.mapValues(vs, (cls, name) => {
-            const attributes = _.mapValues(cls.attributes, a => reviveType(a, result.enums, ownTypes))
+            const attributes = _.mapValues(cls.attributes, a => {
+              return { type: reviveType(a.type, result.enums, ownTypes)
+                     , mandatory: a.mandatory
+                     , errorCallback: reviveCallback(a.errorCallback)
+                     }
+            })
             return new JSMF.Class(name, [], attributes)
         })
     )
@@ -85,6 +90,7 @@ function resolveClassReferences(rawClasses, hydratedClasses) {
                 _.mapValues(rawClasses[i][k].references, r => {
                     const ref = { type: hydratedClasses[r.type.uuid][r.type.index]
                               , cardinality: JSMF.Cardinality.check(r.cardinality)
+                              , errorCallback: reviveCallback(r.errorCallback)
                               };
                     if (r.opposite !== undefined) { ref.opposite = r.opposite }
                     if (r.associated !== undefined) {
@@ -197,17 +203,24 @@ function resolveRef(ref, content) {
     const ix = ref.index
     return _.get(content.elements, [uuid, ix])
         || _.get(content.classes, [uuid, ix])
-        || _.get(content.enums, [uuid, ix]);
+        || _.get(content.enums, [uuid, ix])
 }
 
 function dryClass(m, ownTypes, enums, classes) {
     const res = {}
     res.superClasses = _.map(m.superClasses, s => jsmfFindByName(s, classes))
-    res.attributes = _.mapValues(m.attributes, a => stringifyType(a, enums, ownTypes))
+    res.attributes = _.mapValues(m.attributes, a => {
+      return { type: stringifyType(a.type, enums, ownTypes)
+             , mandatory: a.mandatory
+             , errorCallback: stringifyCallback(a.errorCallback)
+             }
+    })
     res.references = _.mapValues(m.references, r => {
+        if (r.errorCallback === undefined) {console.log(r)}
         const dryR = { type: jsmfFindByName(r.type, classes)
                , opposite: r.opposite
                , cardinality: r.cardinality
+               , errorCallback: stringifyCallback(r.errorCallback)
                }
         if (r.associated !== undefined) {
             dryR.associated = jsmfFindByName(r.associated, classes)
@@ -274,6 +287,24 @@ function reviveType(t, enums, ownTypes) {
                  } else {
                    throw err
                  }
+    }
+}
+
+function stringifyCallback(c) {
+    switch (c) {
+      case JSMF.onError.throw: return 'throw'
+      case JSMF.onError.log: return 'log'
+      case JSMF.onError.silent: return 'silent'
+      default: throw new TypeError(`UnknownCallback ${c}`)
+    }
+}
+
+function reviveCallback(c) {
+    switch (c) {
+      case 'throw': return JSMF.onError.throw
+      case 'log': return JSMF.onError.log
+      case 'silent': JSMF.onError.silent
+      default: throw new TypeError(`UnknownCallback ${c}`)
     }
 }
 
