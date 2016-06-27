@@ -37,7 +37,7 @@ function readModel(path) {
 
 function stringify(m, ownTypes) {
     const result = {classes: {}, elements: {}, enums: {}, model: {}}
-    result.model = prepareModel(m, ownTypes, result)
+    result.model = prepareModel(m, result)
     var dryElements = _.mapValues(result.elements, function (xs) {
         return _.map(xs, x => dryElement(x, result.classes, result.elements));
     });
@@ -124,11 +124,11 @@ function hydrateModel(m, content) {
     return new Model(m.__name, referenceModel, modellingElements)
 }
 
-function prepareModel(m, ownTypes, content) {
+function prepareModel(m, content) {
     const preparedModel = {}
     preparedModel.__name = m.__name;
     if (!_.isEmpty(m.referenceModel)) {
-      preparedModel.referenceModel = prepareModel(m.referenceModel, ownTypes, content)
+      preparedModel.referenceModel = prepareModel(m.referenceModel, content)
     }
     preparedModel.modellingElements = _.mapValues(
         m.modellingElements, xs =>

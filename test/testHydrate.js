@@ -97,6 +97,26 @@ describe('JSON serialization / rebuild', function() {
             done();
       });
 
+      it('works with custom attributes', function(done) {
+          function MyPositive(x) {return x >= 0;}
+          function ownTypeParser(x) {
+            if (x == MyPositive) {return 'MyPositive'}
+            return undefined
+          }
+          function ownTypeUnparser(x) {
+            if (x == 'MyPositive') {return MyPositive}
+            return undefined
+          }
+          var f = new Class('Foo', [], {name: MyPositive});
+          var e = new f(42);
+            var original = new JSMF.Model('M', {}, [e]);
+            var str = json.stringify(original, ownTypeParser);
+            var rebuilt = json.parse(str, ownTypeUnparser);
+            rebuilt.should.eql(original);
+            done();
+      });
+
+
       it('works for a single element with a reference model', function(done) {
           var f = new Class('Foo', [], {name: String});
           var e = new f(42);

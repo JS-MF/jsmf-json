@@ -1,6 +1,6 @@
 {
   "name": "jsmf-json",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Javascript Modelling Framework serialization",
   "main": "index.js",
   "directories": {
